@@ -6,20 +6,20 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
 
-public class udpServer{
+public class udpServerThread implements Runnable{
 	private DatagramSocket socket;
 	private DatagramPacket sendpacket;
 	private DatagramPacket recpacket;
 	private InetAddress addr;
 	private int port;
 
-	public static void main(String[] args) {
+	public static void main(String[] args) throws InterruptedException {
 		// TODO Auto-generated method stub
-		udpServer server = new udpServer();
-		server.serviceClients();
+		udpServerThread server = new udpServerThread();
+			server.serviceClients();
 	}
 	//构造函数
-	public udpServer(){
+	public udpServerThread(){
 		byte[] buffer=new byte[1024];
 		recpacket=new DatagramPacket(buffer,1024);
 		try {
@@ -42,32 +42,37 @@ public class udpServer{
 		try {
 			socket.send(sendpacket);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			//e.printStackTrace();
 			System.out.println("数据发送出错");
 		}
 	}
 	//接收数据
 	public void receivePacket(){
-		try {
-			socket.receive(recpacket);
-		} catch (IOException e) {
-			//e.printStackTrace();
-			System.out.println("接收数据出错");
-		}
 		addr=recpacket.getAddress();
 		port=recpacket.getPort();
-		System.out.println("收到来自"+addr+":"+port+"端口的数据包");
+		System.out.println("收到来自"+this.addr+":"+this.port+"端口的数据包");
 		
 		String msg=new String(recpacket.getData(),recpacket.getOffset(),recpacket.getLength());
 		System.out.println("收到的请求学号是:"+msg);
 	}
 	
-	public void serviceClients(){
-		//这样是最简单的可以重复响应客户端的
-		for(;;){
-			receivePacket();
-			sendPacket();
+	public void serviceClients() throws InterruptedException{
+		try {
+			while(true){
+				byte[] buffer=new byte[1024];
+				DatagramPacket recpacket=new DatagramPacket(buffer,1024);;
+				socket.receive(recpacket);
+				this.recpacket=recpacket;
+				Thread t=new Thread(this);
+				t.start();
+			}
+		} catch (IOException e) {
+			System.out.println("接收数据出错");
 		}
+	}
+	@Override
+	public void run() {
+		System.out.println("新建线程处理请求");
+		receivePacket();
+		sendPacket();
 	}
 }

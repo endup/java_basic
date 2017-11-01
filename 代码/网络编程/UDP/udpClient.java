@@ -17,7 +17,6 @@ public class udpClient {
 		try {
 			String j="";
 			while(true){
-				
 				System.out.println("请输入要查询的学生学号(输入'quit'结束查询)\n");
 				j=scanner.next();
 				if(j=="quit")break;
@@ -26,12 +25,11 @@ public class udpClient {
 				//构造udp的socket
 				DatagramSocket socket=new DatagramSocket();
 				//udp报文对象
-				String message="send message "+j;
-				char[] cArray=message.toCharArray();
-				byte[] sendbuf=new byte[cArray.length];
+				String message=""+j;
+				byte[] sendbuf=message.getBytes();
 				InetAddress addr=InetAddress.getByName("127.0.0.1");
 				
-				DatagramPacket sendPacket=new DatagramPacket(sendbuf,cArray.length,addr,7000);
+				DatagramPacket sendPacket=new DatagramPacket(sendbuf,sendbuf.length,addr,7000);
 				System.out.println("发送数据到:"+addr);
 				
 				//发送数据
@@ -43,25 +41,11 @@ public class udpClient {
 				DatagramPacket receivePacket=new DatagramPacket(recbuf,256);
 				//接收数据
 				socket.receive(receivePacket);
+				String msg=new String(receivePacket.getData(),receivePacket.getOffset(),receivePacket.getLength());
 				
-				System.out.println("接收到来自"+receivePacket.getAddress()+"数据:");
-				
-				//读取收到的数据
-				ByteArrayInputStream bin=new ByteArrayInputStream(receivePacket.getData(),0,receivePacket.getLength());
-				BufferedReader reader=new BufferedReader(new InputStreamReader(bin));
-				
-					String line=reader.readLine();
-					if(line==null){
-						socket.close();
-						break;
-					}
-					else{
-						System.out.println("收到的数据是:"+line);
-					}
-				Thread.sleep(1000);
+				System.out.print("接收到数据:"+msg);
 			}
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			System.out.println("发送失败");
 		}
 	}
